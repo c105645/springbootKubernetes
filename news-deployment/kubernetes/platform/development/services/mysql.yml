@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: newsdb-mysql
+  labels:
+    db: newsdb-mysql
+spec:
+  selector:
+    matchLabels:
+      app: newsdb-mysql
+  template:
+    metadata:
+      labels:
+        app: newsdb-mysql
+    spec:
+      containers:
+        - name: newsdb-mysql
+          image: mysql:8.0.31
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: Vihaan@2020
+            - name: MYSQL_DATABASE
+              value: newsdb 
+          ports:
+          - containerPort: 3306
+            name: newsdb-mysql
+          volumeMounts:
+          - name: mysql-persistent-storage
+            mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: newsdb-mysql
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: newsdb-mysql
+  clusterIP: None

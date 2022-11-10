@@ -1,0 +1,6 @@
+include('../../../../AuthenticationService/Tiltfile')
+include('../../../../NewsService/Tiltfile')
+include('../../../../NewsSourceService/Tiltfile')
+include('../../../../UserProfileService/Tiltfile')
+
+update_settings(max_parallel_updates=1)

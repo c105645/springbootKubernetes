@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: newssource-service
+  labels:
+    app: newssource-service
+spec:
+  type: ClusterIP
+  selector:
+    app: newssource-service
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9000

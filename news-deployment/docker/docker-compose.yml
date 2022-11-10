@@ -1,0 +1,75 @@
+# Dockerfile has been added in all micro-services, you need to dockerize all micro-services and add docker-compose.yml file
+version: "3.8"
+services:
+#  eureka-service:
+#    image: ghcr.io/c105645/eureka-server:0.0.1-SNAPSHOT
+#    container_name: eureka-service
+#    ports:
+#      - 8070:8070
+#    environment:
+#      - BPL_JVM_THREAD_COUNT=50
+#      - SPRING_PROFILES_ACTIVE=testdata
+      
+  authentication-service:
+    depends_on:
+      - newsdb-mysql
+    image: ghcr.io/c105645/authentication-service:0.0.1-SNAPSHOT
+    container_name: authentication-service
+    ports:
+      - 8080:8080   
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - SPRING_DATASOURCE_URL=jdbc:mysql://newsdb-mysql:3306/newsdb
+      - SPRING_PROFILES_ACTIVE=testdata
+      
+  news-service:
+    depends_on:
+      - newsdb-mysql
+    image: ghcr.io/c105645/news-service:0.0.1-SNAPSHOT
+    container_name: news-service
+    ports:
+      - 8090:8090 
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - SPRING_DATASOURCE_URL=jdbc:mysql://newsdb-mysql:3306/newsdb
+      - SPRING_PROFILES_ACTIVE=testdata
+ 
+  newssource-service:
+    depends_on:
+      - newsdb-mysql
+    image: ghcr.io/c105645/newssource-service:0.0.1-SNAPSHOT
+    container_name: newssource-service
+    ports:
+      - 9000:9000  
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - SPRING_DATASOURCE_URL=jdbc:mysql://newsdb-mysql:3306/newsdb
+      - SPRING_PROFILES_ACTIVE=testdata
+ 
+  userprofile-service:
+    depends_on:
+      - newsdb-mysql
+    image: ghcr.io/c105645/userprofile-service:0.0.1-SNAPSHOT
+    container_name: userprofile-service
+    ports:
+      - 9010:9010    
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - SPRING_DATASOURCE_URL=jdbc:mysql://newsdb-mysql:3306/newsdb
+      - SPRING_PROFILES_ACTIVE=testdata
+ 
+  newsdb-mysql:
+    image: mysql:8.0.31
+    restart: always
+    container_name: newsdb-mysql
+    ports:
+      - 3306:3306   
+    environment:
+      - MYSQL_ROOT_PASSWORD=Vihaan@2020
+      - MYSQL_DATABASE=newsdb 
+
+  polar-redis:
+    image: "redis:7.0"
+    container_name: "news-redis"
+    ports:
+      - 6379:6379

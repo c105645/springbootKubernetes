@@ -1,0 +1,137 @@
+jwt:
+  signing:
+    key: ymLTU8rq83j4fmJZj60wh4OrMNuntIj4fmJ  
+springdoc:
+  version: 1.6.11
+server:
+  port: 8080
+  shutdown: graceful
+  netty:
+    connection-timeout: 2s
+    idle-timeout: 15s
+spring:
+  application:
+    name: authentication-service
+  lifecycle:
+    timeout-per-shutdown-phase: 15s
+  session:
+    store-type: redis
+    timeout: 10m
+    redis:
+      namespace: news:edge
+
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 5s
+        pool:
+          type: elastic
+          max-idle-time: 15s
+          max-life-time: 60s
+      default-filters:
+        - SaveSession
+        - name: Retry
+          args:
+            retries: 3
+            methods: GET
+            series: SERVER_ERROR
+            exceptions: java.io.IOException, java.util.concurrent.TimeoutException
+            backoff:
+              firstBackoff: 50ms
+              maxBackOff: 500ms
+              factor: 2
+              basedOnPreviousValue: false  
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter:
+              replenishRate: 10
+              burstCapacity: 20
+              requestedTokens: 1               
+      routes: 
+       - id: news-service
+         uri: ${NEWS_SERVICE_URL:http://localhost:8090}/api/v1/news
+         predicates:
+           - Path=/api/v1/news/**
+
+         filters:
+           - JwtAuthenticationFilter
+           - name: CircuitBreaker
+             args:
+               name: newsCircuitBreaker
+               fallbackUri: forward:/news-fallback
+                       
+                       
+       - id: newssource-service
+         uri: ${NEWSSOURCE_SERVICE_URL:http://localhost:8090}/api/v1/newssource
+
+         predicates:
+          - Path=/api/v1/newssource/**
+
+         filters:
+           - JwtAuthenticationFilter
+           - name: CircuitBreaker
+             args:
+               name: newssourceCircuitBreaker
+          
+          
+       - id: userprofile-service
+         uri: ${USERPROFILE_SERVICE_URL:http://localhost:8090}/api/v1/userprofile
+
+         predicates:
+           - Path=/api/v1/userprofile/**
+
+         filters:
+            - JwtAuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: userprofileCircuitBreaker            
+          
+  datasource:
+    username: root
+    url: jdbc:mysql://newsdb-mysql:3306/newsdb
+    password: Vihaan@2020
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+  jackson:
+    serialization:
+      fail-on-empty-beans: 'false'  
+  redis:
+    connect-timeout: 2s
+    host: localhost
+    port: 6379
+    timeout: 1s                       
+#eureka:
+#  instance:
+#    preferIpAddress: 'true'
+#  client:
+#    fetchRegistry: 'true'
+#    registerWithEureka: 'true'
+#    serviceUrl:
+#      defaultZone: http://eureka-service:8070/eureka/
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 20
+        permittedNumberOfCallsInHalfOpenState: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 15000
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
+
+logging:
+  level:
+    io.github.resilience4j: DEBUG       
+    

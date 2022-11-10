@@ -1,0 +1,16 @@
+# Build
+custom_build(
+    # Name of the container image
+    ref = 'ghcr.io/c105645/newssource-service',
+    tag='0.0.1-SNAPSHOT',
+    # Command to build the container image
+    command = 'mvnw spring-boot:build-image -DimageName=ghcr.io/c105645/newssource-service:0.0.1-SNAPSHOT -DregistryUrl=ghcr.io -DregistryUsername=c105645 -DregistryToken=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',
+    # Files to watch that trigger a new build
+    deps = ['pom.xml', 'src']
+)
+
+# Deploy
+k8s_yaml(['k8s/deployment.yml', 'k8s/service.yml'])
+
+# Manage
+#k8s_resource('news-source', port_forwards=['9000'])

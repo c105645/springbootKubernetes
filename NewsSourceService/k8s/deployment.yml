@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: newssource-service
+  labels:
+    app: newssource-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: newssource-service
+  template:
+    metadata:
+      labels:
+        app: newssource-service
+    spec:
+      containers:
+        - name: newssource-service
+          image: ghcr.io/c105645/newssource-service:0.0.1-SNAPSHOT
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "sh", "-c", "sleep 5" ]
+          ports:
+            - containerPort: 9000
+          env:
+            - name: BPL_JVM_THREAD_COUNT
+              value: "50"
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://newsdb-mysql/newsdb
+            - name: SPRING_PROFILES_ACTIVE
+              value: testdata
